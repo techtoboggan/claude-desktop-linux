@@ -122,19 +122,20 @@ const _iconFull=_cNI.createFromPath(_iconPath);
 const _iconSmall=_iconFull.isEmpty()?_iconFull:_iconFull.resize({width:48,height:48});
 const _iconDataUrl=_iconSmall.isEmpty()?null:_iconSmall.toDataURL();
 
-if(process.platform==="linux"){
-  // Suppress the visible menu bar (Linux uses CSD — no menu bar needed).
-  // Dock/taskbar right-click actions come from the .desktop file, not Electron menus.
-  const _origSetMenu=_cMenu.setApplicationMenu.bind(_cMenu);
-  _cMenu.setApplicationMenu=()=>_origSetMenu(null);
-}
+// On Linux: don't nuke the application menu — KDE's system tray "Quit" and
+// "Show App" actions need it. Instead, hide the menu bar per-window and let
+// Electron's tray/quit handlers work normally.
 
 _capp.on("ready",()=>{
-  _cMenu.setApplicationMenu(null);
   try{if(!_iconFull.isEmpty()&&_capp.setIcon)_capp.setIcon(_iconFull);}catch(ex){}
 });
 
 _capp.on("browser-window-created",(e,w)=>{
+  // Hide the menu bar visually but keep the menu functional for tray actions
+  if(process.platform==="linux"){
+    w.setMenuBarVisibility(false);
+    w.setAutoHideMenuBar(true);
+  }
   try{if(!_iconFull.isEmpty())w.setIcon(_iconFull);}catch(ex){}
 
   if(process.platform!=="linux"||!_iconDataUrl)return;
