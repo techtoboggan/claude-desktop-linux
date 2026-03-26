@@ -123,26 +123,14 @@ const _iconSmall=_iconFull.isEmpty()?_iconFull:_iconFull.resize({width:48,height
 const _iconDataUrl=_iconSmall.isEmpty()?null:_iconSmall.toDataURL();
 
 if(process.platform==="linux"){
-  // Replace the menu bar with a minimal hidden menu that still provides
-  // dock/taskbar right-click actions (Quit, etc.) and keyboard shortcuts.
+  // Suppress the visible menu bar (Linux uses CSD — no menu bar needed).
+  // Dock/taskbar right-click actions come from the .desktop file, not Electron menus.
   const _origSetMenu=_cMenu.setApplicationMenu.bind(_cMenu);
-  _cMenu.setApplicationMenu=(m)=>{
-    if(!m){_origSetMenu(null);return;}
-    // Build a minimal menu: keep Edit (copy/paste shortcuts) and a Quit item
-    const _tpl=[
-      {label:"Edit",submenu:[
-        {role:"undo"},{role:"redo"},{type:"separator"},
-        {role:"cut"},{role:"copy"},{role:"paste"},{role:"selectAll"}
-      ]},
-      {label:"Window",submenu:[
-        {role:"minimize"},{role:"close"}
-      ]}
-    ];
-    _origSetMenu(_cMenu.buildFromTemplate(_tpl));
-  };
+  _cMenu.setApplicationMenu=()=>_origSetMenu(null);
 }
 
 _capp.on("ready",()=>{
+  _cMenu.setApplicationMenu(null);
   try{if(!_iconFull.isEmpty()&&_capp.setIcon)_capp.setIcon(_iconFull);}catch(ex){}
 });
 
@@ -294,6 +282,15 @@ Terminal=false
 Categories=Office;Utility;
 MimeType=x-scheme-handler/claude;
 StartupWMClass=Claude
+Actions=quit;new-window;
+
+[Desktop Action quit]
+Name=Quit
+Exec=sh -c 'pkill -f claude-desktop'
+
+[Desktop Action new-window]
+Name=New Window
+Exec=claude-desktop
 EOF
 
     # Launcher script with Wayland detection, keyring support, logging
