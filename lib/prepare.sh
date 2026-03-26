@@ -123,13 +123,26 @@ const _iconSmall=_iconFull.isEmpty()?_iconFull:_iconFull.resize({width:48,height
 const _iconDataUrl=_iconSmall.isEmpty()?null:_iconSmall.toDataURL();
 
 if(process.platform==="linux"){
-  // Block all menu-bar creation before any app code runs.
+  // Replace the menu bar with a minimal hidden menu that still provides
+  // dock/taskbar right-click actions (Quit, etc.) and keyboard shortcuts.
   const _origSetMenu=_cMenu.setApplicationMenu.bind(_cMenu);
-  _cMenu.setApplicationMenu=()=>_origSetMenu(null);
+  _cMenu.setApplicationMenu=(m)=>{
+    if(!m){_origSetMenu(null);return;}
+    // Build a minimal menu: keep Edit (copy/paste shortcuts) and a Quit item
+    const _tpl=[
+      {label:"Edit",submenu:[
+        {role:"undo"},{role:"redo"},{type:"separator"},
+        {role:"cut"},{role:"copy"},{role:"paste"},{role:"selectAll"}
+      ]},
+      {label:"Window",submenu:[
+        {role:"minimize"},{role:"close"}
+      ]}
+    ];
+    _origSetMenu(_cMenu.buildFromTemplate(_tpl));
+  };
 }
 
 _capp.on("ready",()=>{
-  _cMenu.setApplicationMenu(null);
   try{if(!_iconFull.isEmpty()&&_capp.setIcon)_capp.setIcon(_iconFull);}catch(ex){}
 });
 
