@@ -128,24 +128,26 @@ _capp.on("ready",()=>{
   try{if(!_iconFull.isEmpty()&&_capp.setIcon)_capp.setIcon(_iconFull);}catch(ex){}
 
   // Register stub handlers for eipc interfaces that have no implementation on Linux.
-  // Without these, the app spams "No handler registered" errors which can block event flow.
-  const{session:_sess}=require("electron");
-  const _eipcPrefix="$eipc_message$_742e51f2-18f9-4a58-bbe9-e8a5cc4381ee_$_";
-  const _missingHandlers={
-    // ComputerUseTcc — macOS Transparency/Consent/Control, not applicable on Linux
-    "claude.web_$_ComputerUseTcc_$_getState":()=>({granted:true}),
-    "claude.web_$_ComputerUseTcc_$_request":()=>({granted:true}),
-  };
-  for(const[suffix,handler] of Object.entries(_missingHandlers)){
-    const ch=_eipcPrefix+suffix;
-    try{_sess.defaultSession.setPreloads?.([]);} catch(_){}
-    try{
-      const{ipcMain:_ipc}=require("electron");
-      _ipc.handle(ch,handler);
-    }catch(ex){
-      // Handler already registered by app — that's fine
+  // The eipc framework's catch-all may register first, so we delay and replace.
+  setTimeout(()=>{
+    const{ipcMain:_ipc}=require("electron");
+    const _eipcPrefix="$eipc_message$_742e51f2-18f9-4a58-bbe9-e8a5cc4381ee_$_";
+    const _stubs={
+      "claude.web_$_ComputerUseTcc_$_getState":       ()=>({screenRecording:true,accessibility:true}),
+      "claude.web_$_ComputerUseTcc_$_requestAccessibility":()=>({granted:true}),
+      "claude.web_$_ComputerUseTcc_$_requestScreenRecording":()=>({granted:true}),
+      "claude.web_$_ComputerUseTcc_$_openSystemSettings":()=>{},
+      "claude.web_$_ComputerUseTcc_$_getCurrentSessionGrants":()=>[],
+      "claude.web_$_ComputerUseTcc_$_revokeGrant":    ()=>{},
+      "claude.web_$_ComputerUseTcc_$_listInstalledApps":()=>[],
+    };
+    for(const[suffix,handler] of Object.entries(_stubs)){
+      const ch=_eipcPrefix+suffix;
+      try{_ipc.removeHandler(ch);}catch(_){}
+      try{_ipc.handle(ch,handler);}catch(_){}
     }
-  }
+    console.log("[cowork-linux] Registered ComputerUseTcc stubs");
+  },2000);
 });
 
 _capp.on("browser-window-created",(e,w)=>{
