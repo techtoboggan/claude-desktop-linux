@@ -122,12 +122,30 @@ const _iconFull=_cNI.createFromPath(_iconPath);
 const _iconSmall=_iconFull.isEmpty()?_iconFull:_iconFull.resize({width:48,height:48});
 const _iconDataUrl=_iconSmall.isEmpty()?null:_iconSmall.toDataURL();
 
-// Minimal Linux integration: hide menu bar, set icon.
-// Do NOT intercept setApplicationMenu — it breaks KDE tray Quit/Show App.
-// The app's own menu and tray handling works if we leave it alone.
+// Minimal Linux integration: hide menu bar, set icon, register missing eipc stubs.
 
 _capp.on("ready",()=>{
   try{if(!_iconFull.isEmpty()&&_capp.setIcon)_capp.setIcon(_iconFull);}catch(ex){}
+
+  // Register stub handlers for eipc interfaces that have no implementation on Linux.
+  // Without these, the app spams "No handler registered" errors which can block event flow.
+  const{session:_sess}=require("electron");
+  const _eipcPrefix="$eipc_message$_742e51f2-18f9-4a58-bbe9-e8a5cc4381ee_$_";
+  const _missingHandlers={
+    // ComputerUseTcc — macOS Transparency/Consent/Control, not applicable on Linux
+    "claude.web_$_ComputerUseTcc_$_getState":()=>({granted:true}),
+    "claude.web_$_ComputerUseTcc_$_request":()=>({granted:true}),
+  };
+  for(const[suffix,handler] of Object.entries(_missingHandlers)){
+    const ch=_eipcPrefix+suffix;
+    try{_sess.defaultSession.setPreloads?.([]);} catch(_){}
+    try{
+      const{ipcMain:_ipc}=require("electron");
+      _ipc.handle(ch,handler);
+    }catch(ex){
+      // Handler already registered by app — that's fine
+    }
+  }
 });
 
 _capp.on("browser-window-created",(e,w)=>{
