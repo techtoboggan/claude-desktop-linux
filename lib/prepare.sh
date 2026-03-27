@@ -122,58 +122,9 @@ const _iconFull=_cNI.createFromPath(_iconPath);
 const _iconSmall=_iconFull.isEmpty()?_iconFull:_iconFull.resize({width:48,height:48});
 const _iconDataUrl=_iconSmall.isEmpty()?null:_iconSmall.toDataURL();
 
-if(process.platform==="linux"){
-  let _forceQuit=false;
-
-  // Intercept setApplicationMenu: let the app set whatever menu it wants,
-  // but ensure there's always a working Quit item for the tray, and hide
-  // the visual menu bar on each window.
-  const _origSetMenu=_cMenu.setApplicationMenu.bind(_cMenu);
-  _cMenu.setApplicationMenu=(m)=>{
-    if(!m){
-      m=_cMenu.buildFromTemplate([{role:"appMenu"},{role:"editMenu"},{role:"windowMenu"}]);
-    }
-    _origSetMenu(m);
-    const{BrowserWindow:_BW}=require("electron");
-    for(const win of _BW.getAllWindows()){
-      win.setMenuBarVisibility(false);
-      win.setAutoHideMenuBar(true);
-    }
-  };
-
-  // Ensure closing all windows actually quits the app
-  _capp.on("window-all-closed",()=>{_capp.quit();});
-
-  // KDE tray "Quit" calls app.quit() but the app's before-quit handler may
-  // block it (to stay in tray). Override: once quit is requested, force it.
-  _capp.on("before-quit",(e)=>{_forceQuit=true;});
-
-  // KDE tray "Show App" sends Activate via D-Bus. Electron emits this as
-  // a click on the Tray. We also handle it by watching for the activate event
-  // on the app and showing/focusing the main window.
-  _capp.on("activate",()=>{
-    const{BrowserWindow:_BW}=require("electron");
-    const wins=_BW.getAllWindows();
-    if(wins.length>0){
-      const w=wins[0];
-      if(w.isMinimized())w.restore();
-      w.show();
-      w.focus();
-    }
-  });
-
-  // Also handle second-instance (which Electron fires on Activate for single-instance apps)
-  _capp.on("second-instance",()=>{
-    const{BrowserWindow:_BW}=require("electron");
-    const wins=_BW.getAllWindows();
-    if(wins.length>0){
-      const w=wins[0];
-      if(w.isMinimized())w.restore();
-      w.show();
-      w.focus();
-    }
-  });
-}
+// Minimal Linux integration: hide menu bar, set icon.
+// Do NOT intercept setApplicationMenu — it breaks KDE tray Quit/Show App.
+// The app's own menu and tray handling works if we leave it alone.
 
 _capp.on("ready",()=>{
   try{if(!_iconFull.isEmpty()&&_capp.setIcon)_capp.setIcon(_iconFull);}catch(ex){}
@@ -181,8 +132,9 @@ _capp.on("ready",()=>{
 
 _capp.on("browser-window-created",(e,w)=>{
   if(process.platform==="linux"){
-    w.setMenuBarVisibility(false);
+    // Hide the visual menu bar but don't touch the Menu object
     w.setAutoHideMenuBar(true);
+    w.setMenuBarVisibility(false);
   }
   try{if(!_iconFull.isEmpty())w.setIcon(_iconFull);}catch(ex){}
 
