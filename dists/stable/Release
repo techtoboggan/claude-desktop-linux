@@ -4,4 +4,22 @@ Suite: stable
 Codename: stable
 Architectures: amd64
 Components: main
+Date: Sat, 28 Mar 2026 13:22:26 +0000
 Description: Security-focused Claude Desktop for Linux
+Date: Sat, 28 Mar 2026 13:22:26 +0000
+MD5Sum:
+ 6edc676ccb5c460c70705abd99d5b5e9              269 Release
+ 6dd20161fb16af7b812785b9020c8297             1098 main/binary-amd64/Packages
+ 5ed811457c1d2980e33ba5f17004e2be              718 main/binary-amd64/Packages.gz
+SHA1:
+ 1bd96f608f8b7439c5fa1599593426d761b726cf              269 Release
+ 61bb4f7bd3bdca33222774667a5b31bb21e2757f             1098 main/binary-amd64/Packages
+ 7542aeb6f92ca84abf8e91038a4d7e6483c8aad3              718 main/binary-amd64/Packages.gz
+SHA256:
+ 24c072c729cd72d5aaaa5ed34616e2c5a6296def8a46d6f729ca9c977c894e9b              269 Release
+ eab444193f87d4c9f313ba210bdf72ce22d44933c1484b01db639f8822a8b998             1098 main/binary-amd64/Packages
+ ae13f2a49c8f78040bdcba0932ea39c12e713b265549410defc783bf68179879              718 main/binary-amd64/Packages.gz
+SHA512:
+ 5885e1ebf814f47a83715b0f04211ee47c19b3dc94059e89d197aaaf90c55d04b324fa989fb509abc4765b414a75330309ab6b65397a457d32b896d85520c16b              269 Release
+ 966b92480d608e54a06a5db0513df461345ae7706214394737607fffd3ca9b0fec41994d6ae6b0be860ccd2c3c6d09cd6ff2892801127e3e2c7c56a934a44ebe             1098 main/binary-amd64/Packages
+ 8ae6fd3b38f2287cbb9f804e2c7cb101199d6ad6869b0771bf9674334e60a1c5cb6b4739d938b66b21c70ffce40e92fbd8a019386334811be4796091176638a4              718 main/binary-amd64/Packages.gz
